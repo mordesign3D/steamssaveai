@@ -5,7 +5,7 @@ const app = express();
 app.use(cors());
 
 app.get('/', (req, res) => {
-    res.send('✅ Serveur StreamSave en ligne !');
+    res.send('Serveur OK');
 });
 
 app.get('/download', async (req, res) => {
@@ -13,8 +13,15 @@ app.get('/download', async (req, res) => {
         const ytdl = require('@distube/ytdl-core');
         const url = req.query.url;
         
-        if (!url) return res.status(400).send('URL manquante');
-        if (!ytdl.validateURL(url)) return res.status(400).send('URL invalide');
+        // Verification sans point d'exclamation pour eviter erreur ZSH
+        if (url == null || url == '') {
+            return res.status(400).send('URL manquante');
+        }
+        
+        const isValid = ytdl.validateURL(url);
+        if (isValid == false) {
+             return res.status(400).send('URL invalide');
+        }
 
         const info = await ytdl.getBasicInfo(url);
         const title = info.videoDetails.title.replace(/[^a-z0-9]/gi, '_');
@@ -28,7 +35,7 @@ app.get('/download', async (req, res) => {
 
     } catch (error) {
         console.error(error);
-        res.status(500).send(error.message);
+        res.status(500).send('Erreur serveur');
     }
 });
 
