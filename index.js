@@ -8,6 +8,33 @@ app.get('/', (req, res) => {
     res.send('✅ Serveur StreamSave en ligne !');
 });
 
+// NOUVELLE ROUTE : Pour récupérer le titre et l'image
+app.get('/info', async (req, res) => {
+    try {
+        const ytdl = require('@distube/ytdl-core');
+        const url = req.query.url;
+
+        if (!url || !ytdl.validateURL(url)) {
+             return res.status(400).json({ error: 'URL invalide' });
+        }
+
+        const info = await ytdl.getBasicInfo(url);
+        
+        // On renvoie les infos au site
+        res.json({
+            title: info.videoDetails.title,
+            description: info.videoDetails.description ? info.videoDetails.description.substring(0, 200) + '...' : '',
+            author: info.videoDetails.author.name,
+            thumbnailUrl: info.videoDetails.thumbnails[info.videoDetails.thumbnails.length - 1].url,
+            tags: info.videoDetails.keywords || []
+        });
+
+    } catch (error) {
+        console.error("Erreur Info:", error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.get('/download', async (req, res) => {
     try {
         const ytdl = require('@distube/ytdl-core');
@@ -30,7 +57,7 @@ app.get('/download', async (req, res) => {
         }).pipe(res);
 
     } catch (error) {
-        console.error(error);
+        console.error("Erreur Download:", error.message);
         res.status(500).send(error.message);
     }
 });
